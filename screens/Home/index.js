@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, SafeAreaView, Pressable, Image } from "react-native";
+import React, { useRef } from "react";
+import { View, SafeAreaView, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/core";
 import useAuth from "../../hooks/useAuth";
 import tw from "tailwind-rn";
@@ -11,7 +11,7 @@ import { SwipeCard } from "../../components";
 const Home = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
-  console.log(user);
+  const swipeRef = useRef();
 
   return (
     <SafeAreaView style={tw("bg-gray-700 flex-1")}>
@@ -37,6 +37,7 @@ const Home = () => {
       {/* Swipe Container */}
       <View style={tw("flex-1 -mt-6")}>
         <Swiper
+          ref={swipeRef}
           stackSize={5}
           cardIndex={0}
           cards={DUMMY_DATA}
@@ -63,7 +64,7 @@ const Home = () => {
               title: "BETROTHED",
               style: {
                 label: {
-                  color: "#69BB01",
+                  color: "green",
                 },
               },
             },
@@ -79,6 +80,26 @@ const Home = () => {
             />
           )}
         />
+      </View>
+
+      {/* Buttons */}
+      <View style={tw("flex flex-row justify-evenly")}>
+        <Pressable
+          onPress={() => swipeRef.current.swipeLeft()}
+          style={tw(
+            "items-center justify-center rounded-full w-16 h-16 bg-red-200"
+          )}
+        >
+          <Entypo name="cross" size={24} color="#BB0A1E" />
+        </Pressable>
+        <Pressable
+          onPress={() => swipeRef.current.swipeRight()}
+          style={tw(
+            "items-center justify-center rounded-full w-16 h-16 bg-green-200"
+          )}
+        >
+          <AntDesign name="heart" size={24} color="green" />
+        </Pressable>
       </View>
     </SafeAreaView>
   );
