@@ -1,11 +1,20 @@
 import React, { useRef, useState, useEffect, useLayoutEffect } from "react";
-import { View, SafeAreaView, Pressable, Image } from "react-native";
+import { View, SafeAreaView } from "react-native";
 import { useNavigation } from "@react-navigation/core";
 import useAuth from "../../hooks/useAuth";
 import tw from "tailwind-rn";
 import Swiper from "react-native-deck-swiper";
 import { SwipeCard, NoProfile, Buttons, Header } from "../../components";
-import { onSnapshot, doc, collection } from "@firebase/firestore";
+import {
+  onSnapshot,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  collection,
+} from "@firebase/firestore";
 import { db } from "../../data/firebase";
 
 const Home = () => {
@@ -28,20 +37,54 @@ const Home = () => {
     let unsub;
 
     const fetchCards = async () => {
-      unsub = onSnapshot(collection(db, "users"), (snapshot) => {
-        setProfiles(
-          snapshot.docs
-            .filter((doc) => doc.id !== user.uid)
-            .map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }))
-        );
-      });
+      const passes = getDocs(collection(db, "users", user.uid, "passes")).then(
+        (snapshot) => snapshot.docs.map((doc) => doc.id)
+      );
+      const matches = getDocs(
+        collection(db, "users", user.uid, "matches")
+      ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
+
+      const passedUserIds = passes.length > 0 ? passes : ["test"];
+      const matchedUserIds = matches.length > 0 ? matches : ["test"];
+
+      unsub = onSnapshot(
+        query(
+          collection(db, "users"),
+          where("id", "not-in", [...passedUserIds, ...matchedUserIds])
+        ),
+        (snapshot) => {
+          setProfiles(
+            snapshot.docs
+              .filter((doc) => doc.id !== user.uid)
+              .map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              }))
+          );
+        }
+      );
     };
     fetchCards();
     return unsub;
   }, []);
+
+  const swipeLeft = (cardIndex) => {
+    if (!profiles[cardIndex]) return;
+    const userSwipe = profiles[cardIndex];
+    console.log(`You passed ${userSwipe.displayName}`);
+
+    setDoc(doc(db, "users", user.uid, "passes", userSwipe.id), userSwipe);
+  };
+
+  const swipeRight = async (cardIndex) => {
+    if (!profiles[cardIndex]) return;
+
+    const userSwipe = profiles[cardIndex];
+    setDoc(doc(db, "users", user.uid, "matches", userSwipe.id), userSwipe);
+    // const loggedInProfile = await (
+    //   await getDoc(doc(db, "users", user.uid))
+    // ).data();
+  };
 
   return (
     <SafeAreaView style={tw("bg-gray-700 flex-1")}>
@@ -63,11 +106,13 @@ const Home = () => {
           animateCardOpacity
           verticalSwipe={false}
           containerStyle={{ backgroundColor: "transparent" }}
-          onSwipedLeft={() => {
+          onSwipedLeft={(cardIndex) => {
             console.log("Swipe Pass");
+            swipeLeft(cardIndex);
           }}
-          onSwipedRight={() => {
+          onSwipedRight={(cardIndex) => {
             console.log("Swipe Match");
+            swipeRight(cardIndex);
           }}
           overlayLabels={{
             left: {
