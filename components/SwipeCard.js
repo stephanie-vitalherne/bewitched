@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import tw from "tailwind-rn";
 
-const SwipeCard = ({ id, photoURL, firstName, lastName, job, age }) => {
+const SwipeCard = ({ id, photoURL, displayName, job, age }) => {
   return (
     <View key={id} style={tw("relative bg-white h-3/4 rounded-xl")}>
       {/* Card Image */}
@@ -21,9 +21,7 @@ const SwipeCard = ({ id, photoURL, firstName, lastName, job, age }) => {
         ]}
       >
         <View>
-          <Text style={tw("text-xl font-bold")}>
-            {firstName} {lastName}
-          </Text>
+          <Text style={tw("text-xl font-bold")}>{displayName}</Text>
           <Text>{job}</Text>
         </View>
         <Text style={tw("text-2xl")}>{age}</Text>

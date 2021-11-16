@@ -1,38 +1,57 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect, useLayoutEffect } from "react";
 import { View, SafeAreaView, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/core";
 import useAuth from "../../hooks/useAuth";
 import tw from "tailwind-rn";
-import { AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
 import Swiper from "react-native-deck-swiper";
-import { DUMMY_DATA } from "../../data/dummy-data";
-import { SwipeCard } from "../../components";
+import { SwipeCard, NoProfile, Buttons, Header } from "../../components";
+import { onSnapshot, doc, collection } from "@firebase/firestore";
+import { db } from "../../data/firebase";
 
 const Home = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
   const swipeRef = useRef();
+  const [profiles, setProfiles] = useState([]);
+
+  useLayoutEffect(
+    () =>
+      onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+        if (!snapshot.exists()) {
+          navigation.navigate("Modal");
+        }
+      }),
+    []
+  );
+
+  useEffect(() => {
+    let unsub;
+
+    const fetchCards = async () => {
+      unsub = onSnapshot(collection(db, "users"), (snapshot) => {
+        setProfiles(
+          snapshot.docs
+            .filter((doc) => doc.id !== user.uid)
+            .map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+        );
+      });
+    };
+    fetchCards();
+    return unsub;
+  }, []);
 
   return (
     <SafeAreaView style={tw("bg-gray-700 flex-1")}>
       {/* Header */}
-      <View style={tw("flex-row items-center justify-between px-6")}>
-        <Pressable onPress={logout}>
-          <Image
-            source={{ uri: user.photoURL }}
-            style={tw("h-10 w-10 rounded-full")}
-          />
-        </Pressable>
-        <Pressable>
-          <Image
-            style={tw("w-14 h-14")}
-            source={require("../../assets/eye.png")}
-          />
-        </Pressable>
-        <Pressable onPress={() => navigation.navigate("Chat")}>
-          <Ionicons name="chatbubbles-sharp" size={30} color="#ff9700" />
-        </Pressable>
-      </View>
+      <Header
+        onPressLogout={logout}
+        photoURL={user.photoURL}
+        onPressModal={() => navigation.navigate("Modal")}
+        onPressChat={() => navigation.navigate("Chat")}
+      />
 
       {/* Swipe Container */}
       <View style={tw("flex-1 -mt-6")}>
@@ -40,7 +59,7 @@ const Home = () => {
           ref={swipeRef}
           stackSize={5}
           cardIndex={0}
-          cards={DUMMY_DATA}
+          cards={profiles}
           animateCardOpacity
           verticalSwipe={false}
           containerStyle={{ backgroundColor: "transparent" }}
@@ -69,38 +88,27 @@ const Home = () => {
               },
             },
           }}
-          renderCard={(card) => (
-            <SwipeCard
-              id={card.id}
-              age={card.age}
-              job={card.job}
-              photoURL={card.photoURL}
-              lastName={card.lastName}
-              firstName={card.firstName}
-            />
-          )}
+          renderCard={(card) =>
+            card ? (
+              <SwipeCard
+                id={card.id}
+                age={card.age}
+                job={card.job}
+                photoURL={card.photoURL}
+                displayName={card.displayName}
+              />
+            ) : (
+              <NoProfile />
+            )
+          }
         />
       </View>
 
       {/* Buttons */}
-      <View style={tw("flex flex-row justify-evenly")}>
-        <Pressable
-          onPress={() => swipeRef.current.swipeLeft()}
-          style={tw(
-            "items-center justify-center rounded-full w-16 h-16 bg-red-200"
-          )}
-        >
-          <Entypo name="cross" size={24} color="#BB0A1E" />
-        </Pressable>
-        <Pressable
-          onPress={() => swipeRef.current.swipeRight()}
-          style={tw(
-            "items-center justify-center rounded-full w-16 h-16 bg-green-200"
-          )}
-        >
-          <AntDesign name="heart" size={24} color="green" />
-        </Pressable>
-      </View>
+      <Buttons
+        onPressLeft={() => swipeRef.current.swipeLeft()}
+        onPressRight={() => swipeRef.current.swipeRight()}
+      />
     </SafeAreaView>
   );
 };
