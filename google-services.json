@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "699519957163",
+    "project_id": "bewitched-9a0e9",
+    "storage_bucket": "bewitched-9a0e9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699519957163:android:39d39222fc8072478c9fee",
+        "android_client_info": {
+          "package_name": "host.exp.exponent"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "699519957163-dft0pb70mp67l06vll8aij0tjrdivlk0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "host.exp.exponent",
+            "certificate_hash": "e857414732af2cf10625c745ae301aa8deaa8e60"
+          }
+        },
+        {
+          "client_id": "699519957163-dvuvo4mddu1mba6sj9nf0an98ptvvi7r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSkUMaz_Gkn6vwrIsnN9Kt9ip8NVWnZdw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699519957163-dvuvo4mddu1mba6sj9nf0an98ptvvi7r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699519957163-ei0ff7hen7rp7p5lceqsoofs7flkb7a1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "host.exp.exponent"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
