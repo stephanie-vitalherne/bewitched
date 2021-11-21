@@ -1,6 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Home, Chat, Login, Modal } from "./screens";
+import { Home, Chat, Login, Modal, Matched } from "./screens";
 import useAuth from "./hooks/useAuth";
 
 const Stack = createNativeStackNavigator();
@@ -18,6 +18,9 @@ const StackNavigator = () => {
           </Stack.Group>
           <Stack.Group screenOptions={{ presentation: "modal" }}>
             <Stack.Screen name="Modal" component={Modal} />
+          </Stack.Group>
+          <Stack.Group screenOptions={{ presentation: "transparentModal" }}>
+            <Stack.Screen name="Matched" component={Matched} />
           </Stack.Group>
         </>
       ) : (

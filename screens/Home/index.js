@@ -14,8 +14,10 @@ import {
   query,
   where,
   collection,
+  serverTimestamp,
 } from "@firebase/firestore";
 import { db } from "../../data/firebase";
+import generateId from "../../lib/generateId";
 
 const Home = () => {
   const navigation = useNavigation();
@@ -37,10 +39,10 @@ const Home = () => {
     let unsub;
 
     const fetchCards = async () => {
-      const passes = getDocs(collection(db, "users", user.uid, "passes")).then(
-        (snapshot) => snapshot.docs.map((doc) => doc.id)
-      );
-      const matches = getDocs(
+      const passes = await getDocs(
+        collection(db, "users", user.uid, "passes")
+      ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
+      const matches = await getDocs(
         collection(db, "users", user.uid, "matches")
       ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
 
@@ -66,10 +68,11 @@ const Home = () => {
     };
     fetchCards();
     return unsub;
-  }, []);
+  }, [db]);
 
   const swipeLeft = (cardIndex) => {
     if (!profiles[cardIndex]) return;
+
     const userSwipe = profiles[cardIndex];
     console.log(`You passed ${userSwipe.displayName}`);
 
@@ -80,10 +83,42 @@ const Home = () => {
     if (!profiles[cardIndex]) return;
 
     const userSwipe = profiles[cardIndex];
-    setDoc(doc(db, "users", user.uid, "matches", userSwipe.id), userSwipe);
-    // const loggedInProfile = await (
-    //   await getDoc(doc(db, "users", user.uid))
-    // ).data();
+    const loggedInProfile = await (
+      await getDoc(doc(db, "users", user.uid))
+    ).data();
+
+    // checked if user matched with you
+    getDoc(doc(db, "users", userSwipe.id, "matches", user.id)).then(
+      (documentSnapshot) => {
+        if (documentSnapshot.exists()) {
+          // user has matched with you before you matched with them
+          console.log(`HOORAY you match ${userSwipe.displayName}`);
+
+          setDoc(
+            doc(db, "users", user.uid, "matches", userSwipe.id),
+            userSwipe
+          );
+
+          // create a match
+          setDoc(doc(db, "matches", generateId(user.uid, userSwipe.id)), {
+            users: {
+              [user.uid]: loggedInProfile,
+              [userSwipe.id]: userSwipe,
+            },
+            usersMatched: [user.uid, userSwipe.id],
+            timestamp: serverTimestamp(),
+          });
+
+          navigation.navigate("Matched", { loggedInProfile, userSwipe });
+        } else {
+          // you matched with them first or swiped right on them first
+          setDoc(
+            doc(db, "users", user.uid, "matches", userSwipe.id),
+            userSwipe
+          );
+        }
+      }
+    );
   };
 
   return (
@@ -105,6 +140,7 @@ const Home = () => {
           cards={profiles}
           animateCardOpacity
           verticalSwipe={false}
+          backgroundColor={"#ff9700"}
           containerStyle={{ backgroundColor: "transparent" }}
           onSwipedLeft={(cardIndex) => {
             console.log("Swipe Pass");
